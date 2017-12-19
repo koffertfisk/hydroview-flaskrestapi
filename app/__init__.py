@@ -12,6 +12,7 @@ import os
 import sys
 
 from flask import Flask
+from flask_cors import CORS
 
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
@@ -28,6 +29,7 @@ session = None
 
 app = Flask(__name__)
 app.config.from_object(os.environ['HYDROVIEW_CONFIG'])
+CORS(app)
 
 log = logging.getLogger()
 log.setLevel(app.config['CASSANDRA_LOGLEVEL'])

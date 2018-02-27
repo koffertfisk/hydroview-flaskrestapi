@@ -1527,11 +1527,11 @@ def get_one_sec_single_parameter_measurements_by_station_chart(station_id, param
 
     return json.dumps(sensors, cls=CustomEncoder)
 
-@app.route('/api/dynamic_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_dynamic_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    frequencies_query = "SELECT * FROM measurement_frequencies_by_station_parameter WHERE station_id=? AND parameter_id=?"
+@app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_dynamic_profile_measurements_by_sensor(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    frequencies_query = "SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE sensor_id=? AND parameter_id=?"
     prepared_frequencies_query = session.prepare(frequencies_query)
-    frequencies_rows = session.execute_async(prepared_frequencies_query, (station_id, parameter_id,)).result()
+    frequencies_rows = session.execute_async(prepared_frequencies_query, (sensor_id, parameter_id,)).result()
     frequencies = []
     
     try:
@@ -1558,175 +1558,175 @@ def get_dynamic_profile_measurements_by_station(station_id, parameter_id, qc_lev
                             if delta.seconds < (60 * 60 * 5): # delta < 5 hours                             
                                 if delta.seconds < (60 * 5):    # delta < 5 minutes
                                     if '1 Sec' in frequencies:
-                                        return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '1 Min' in frequencies:
-                                        return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '5 Min' in frequencies:
-                                        return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '10 Min' in frequencies:
-                                        return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '15 Min' in frequencies:
-                                        return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '20 Min' in frequencies:
-                                        return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '30 Min' in frequencies:
-                                        return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif 'Hourly' in frequencies:
-                                        return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif 'Daily' in frequencies:
-                                        return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 else:   # 5 hours > delta >= 5 minutes
                                     if '1 Min' in frequencies:
-                                        return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '1 Sec' in frequencies:
-                                        return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '5 Min' in frequencies:
-                                        return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '10 Min' in frequencies:
-                                        return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '15 Min' in frequencies:
-                                        return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '20 Min' in frequencies:
-                                        return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif '30 Min' in frequencies:
-                                        return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif 'Hourly' in frequencies:
-                                        return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                     elif 'Daily' in frequencies:
-                                        return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                        return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             else:   # 1 days > delta >= 5 hours 
                                 if '5 Min' in frequencies:
-                                    return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif '1 Min' in frequencies:
-                                    return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
+                                    return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
                                 elif '1 Sec' in frequencies:
-                                    return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif '10 Min' in frequencies:
-                                    return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif '15 Min' in frequencies:
-                                    return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif '20 Min' in frequencies:
-                                    return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif '30 Min' in frequencies:
-                                    return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif 'Hourly' in frequencies:
-                                    return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                                 elif 'Daily' in frequencies:
-                                    return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                    return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         else:   # 2 days < delta >= 1 days
                             if '10 Min' in frequencies:
-                                return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif '5 Min' in frequencies:
-                                return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif '1 Min' in frequencies:
-                                return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
+                                return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
                             elif '1 Sec' in frequencies:
-                                return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif '15 Min' in frequencies:
-                                return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif '20 Min' in frequencies:
-                                return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif '30 Min' in frequencies:
-                                return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif 'Hourly' in frequencies:
-                                return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                             elif 'Daily' in frequencies:
-                                return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                                return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     else:   # 3 days > delta >= 2 days
                         if '15 Min' in frequencies:
-                            return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '10 Min' in frequencies:
-                            return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '5 Min' in frequencies:
-                            return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '1 Min' in frequencies:
-                            return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
+                            return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
                         elif '1 Sec' in frequencies:
-                            return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '20 Min' in frequencies:
-                            return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '30 Min' in frequencies:
-                            return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif 'Hourly' in frequencies:
-                            return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif 'Daily' in frequencies:
-                            return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                            return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 else:   # 4 days > delta >= 3 days
                     if '20 Min' in frequencies:
-                        return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif '15 Min' in frequencies:
-                        return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif '10 Min' in frequencies:
-                        return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif '5 Min' in frequencies:
-                        return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif '1 Min' in frequencies:
-                        return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
+                        return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
                     elif '1 Sec' in frequencies:
-                        return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif '30 Min' in frequencies:
-                        return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif 'Hourly' in frequencies:
-                        return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                     elif 'Daily' in frequencies:
-                        return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                        return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             else:   # 6 days < delta >= 4 days
                 if '30 Min' in frequencies:
-                    return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif '20 Min' in frequencies:
-                    return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif '15 Min' in frequencies:
-                    return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif '10 Min' in frequencies:
-                    return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif '5 Min' in frequencies:
-                    return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif '1 Min' in frequencies:
-                    return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
+                    return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
                 elif '1 Sec' in frequencies:
-                    return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif 'Hourly' in frequencies:
-                    return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                 elif 'Daily' in frequencies:
-                    return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                    return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         else:   # 12 days > delta >= 6 days
             if 'Hourly' in frequencies:
-                return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '30 Min' in frequencies:
-                return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '20 Min' in frequencies:
-                return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '15 Min' in frequencies:
-                return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '10 Min' in frequencies:
-                return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '5 Min' in frequencies:
-                return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '1 Min' in frequencies:
-                return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif '1 Sec' in frequencies:
-                return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
             elif 'Daily' in frequencies:
-                return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+                return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
     else:   # unbound > delta >= 12 days
         if 'Daily' in frequencies:
-            return get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif 'Hourly' in frequencies:
-            return get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '30 Min' in frequencies:
-            return get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '20 Min' in frequencies:
-            return get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '15 Min' in frequencies:
-            return get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '10 Min' in frequencies:
-            return get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '5 Min' in frequencies:
-            return get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '1 Min' in frequencies:
-            return get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
         elif '1 Sec' in frequencies:
-            return get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp)
+            return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
     
     return json.dumps([], cls=CustomEncoder)
 
@@ -1934,9 +1934,9 @@ def get_dynamic_profile_measurements_by_station_chart(station_id, parameter_id, 
     
     return json.dumps({}, cls=CustomEncoder)
     
-@app.route('/api/daily_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>')
-def get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level, from_date, to_date):
-    query = "SELECT * FROM daily_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=?"
+@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>')
+def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_date, to_date):
+    query = "SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_date/1000.0)
@@ -1944,7 +1944,7 @@ def get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, year, from_date, to_date, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_date, to_date, )))
     
     data = []
     for future in futures:
@@ -1954,9 +1954,9 @@ def get_daily_profile_measurements_by_station(station_id, parameter_id, qc_level
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/daily_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_daily_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM daily_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY date ASC"
+@app.route('/api/daily_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_daily_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY date ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -1964,36 +1964,31 @@ def get_daily_profile_measurements_by_station_chart(station_id, parameter_id, qc
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('date'), row.get('avg_value')
@@ -2002,11 +1997,11 @@ def get_daily_profile_measurements_by_station_chart(station_id, parameter_id, qc
                         row.get('date'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/hourly_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=?"
+@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2014,7 +2009,7 @@ def get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_leve
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
     
     data = []
     for future in futures:
@@ -2024,9 +2019,9 @@ def get_hourly_profile_measurements_by_station(station_id, parameter_id, qc_leve
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/hourly_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_hourly_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=? ORDER BY date_hour ASC"
+@app.route('/api/hourly_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_hourly_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=? ORDER BY date_hour ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2034,36 +2029,31 @@ def get_hourly_profile_measurements_by_station_chart(station_id, parameter_id, q
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('date_hour'), row.get('avg_value')
@@ -2072,11 +2062,11 @@ def get_hourly_profile_measurements_by_station_chart(station_id, parameter_id, q
                         row.get('date_hour'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/thirty_min_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM thirty_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2085,7 +2075,7 @@ def get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_
     futures = []
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
     data = []
@@ -2096,9 +2086,9 @@ def get_thirty_min_profile_measurements_by_station(station_id, parameter_id, qc_
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/thirty_min_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_thirty_min_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM thirty_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/thirty_min_profile_measurements_by_senosr_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_thirty_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2108,37 +2098,32 @@ def get_thirty_min_profile_measurements_by_station_chart(station_id, parameter_i
     
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2147,11 +2132,11 @@ def get_thirty_min_profile_measurements_by_station_chart(station_id, parameter_i
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/twenty_min_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM twenty_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/twenty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM twenty_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2160,7 +2145,7 @@ def get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_
     futures = []
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
     data = []
@@ -2171,9 +2156,9 @@ def get_twenty_min_profile_measurements_by_station(station_id, parameter_id, qc_
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/twenty_min_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_twenty_min_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM twenty_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/twenty_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_twenty_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM twenty_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2183,37 +2168,32 @@ def get_twenty_min_profile_measurements_by_station_chart(station_id, parameter_i
     
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id not in sensors:
-                sensors[sensor_id] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id]['vertical_positions']:
-                sensors[sensor_id]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2222,11 +2202,11 @@ def get_twenty_min_profile_measurements_by_station_chart(station_id, parameter_i
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/fifteen_min_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM fifteen_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2235,7 +2215,7 @@ def get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc
     futures = []
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
     data = []
@@ -2246,9 +2226,9 @@ def get_fifteen_min_profile_measurements_by_station(station_id, parameter_id, qc
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/fifteen_min_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_fifteen_min_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM fifteen_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/fifteen_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_fifteen_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2258,37 +2238,32 @@ def get_fifteen_min_profile_measurements_by_station_chart(station_id, parameter_
     
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2297,11 +2272,11 @@ def get_fifteen_min_profile_measurements_by_station_chart(station_id, parameter_
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/ten_min_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM ten_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2310,7 +2285,7 @@ def get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_lev
     futures = []
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
     data = []
@@ -2321,9 +2296,9 @@ def get_ten_min_profile_measurements_by_station(station_id, parameter_id, qc_lev
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/ten_min_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_ten_min_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM ten_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/ten_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_ten_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2333,37 +2308,32 @@ def get_ten_min_profile_measurements_by_station_chart(station_id, parameter_id, 
     
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2372,11 +2342,11 @@ def get_ten_min_profile_measurements_by_station_chart(station_id, parameter_id, 
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
     
-@app.route('/api/five_min_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM five_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2385,7 +2355,7 @@ def get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_le
     futures = []
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
     data = []
@@ -2396,9 +2366,9 @@ def get_five_min_profile_measurements_by_station(station_id, parameter_id, qc_le
 
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/five_min_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_five_min_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM five_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/five_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_five_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2408,37 +2378,32 @@ def get_five_min_profile_measurements_by_station_chart(station_id, parameter_id,
     
     current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
     while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
         current_first_day_of_month += relativedelta(months=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2447,11 +2412,11 @@ def get_five_min_profile_measurements_by_station_chart(station_id, parameter_id,
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/one_min_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2461,7 +2426,7 @@ def get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_lev
     year, week_number, weekday = from_dt.isocalendar()
     current_first_day_of_week = datetime.strptime('{} {} 1'.format(year, week_number), '%Y %W %w')
     while (current_first_day_of_week <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_week, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_week, from_timestamp, to_timestamp, )))
         current_first_day_of_week += relativedelta(weeks=1)
     
     data = []
@@ -2472,9 +2437,9 @@ def get_one_min_profile_measurements_by_station(station_id, parameter_id, qc_lev
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/one_min_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_min_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_min_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/one_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_one_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2485,37 +2450,32 @@ def get_one_min_profile_measurements_by_station_chart(station_id, parameter_id, 
     year, week_number, weekday = from_dt.isocalendar()
     current_first_day_of_week = datetime.strptime('{} {} 1'.format(year, week_number), '%Y %W %w')
     while (current_first_day_of_week <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_first_day_of_week, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_week, from_timestamp, to_timestamp, )))
         current_first_day_of_week += relativedelta(weeks=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2524,11 +2484,11 @@ def get_one_min_profile_measurements_by_station_chart(station_id, parameter_id, 
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
-@app.route('/api/one_sec_profile_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_sec_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND timestamp<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2537,7 +2497,7 @@ def get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_lev
     futures = []
     current_day = datetime(from_dt.year, from_dt.month, from_dt.day)
     while (current_day <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_day, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_day, from_timestamp, to_timestamp, )))
         current_day += relativedelta(days=1)
     
     data = []
@@ -2548,9 +2508,9 @@ def get_one_sec_profile_measurements_by_station(station_id, parameter_id, qc_lev
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/one_sec_profile_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_sec_profile_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_sec_profile_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
+@app.route('/api/one_sec_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+def get_one_sec_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
+    query = "SELECT * FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2560,37 +2520,32 @@ def get_one_sec_profile_measurements_by_station_chart(station_id, parameter_id, 
     
     current_day = datetime(from_dt.year, from_dt.month, from_dt.day)
     while (current_day <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, current_day, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_day, from_timestamp, to_timestamp, )))
         current_day += relativedelta(days=1)
     
-    sensors = OrderedDict()
+    series = {
+        'id': sensor_id, 
+        'qc_level': qc_level,
+        'unit': "",
+        'vertical_positions': [],
+        'data': []
+    }
     
     for future in futures:
         rows = future.result()
         for row in rows:
             vertical_position = row.get('vertical_position')
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
             parameter_unit = row.get('unit')
             
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'vertical_positions': [],
-                    'data': []
-                }
-            
-            if vertical_position not in sensors[sensor_id_str]['vertical_positions']:
-                sensors[sensor_id_str]['vertical_positions'].append(vertical_position)
-                sensors[sensor_id_str]['data'].append({
+            if vertical_position not in series['vertical_positions']:
+                series['vertical_positions'].append(vertical_position)
+                series['data'].append({
                     'vertical_position': vertical_position,
                     'averages': [],
                     'ranges': []
                 })
             
-            for vert_pos_item in sensors[sensor_id_str]['data']:
+            for vert_pos_item in sensors['data']:
                 if vertical_position == vert_pos_item.get('vertical_position'):
                     vert_pos_item['averages'].append([
                         row.get('timestamp'), row.get('avg_value')
@@ -2599,7 +2554,7 @@ def get_one_sec_profile_measurements_by_station_chart(station_id, parameter_id, 
                         row.get('timestamp'), row.get('min_value'), row.get('max_value')
                     ])
 
-    return json.dumps(sensors, cls=CustomEncoder)
+    return json.dumps(series, cls=CustomEncoder)
 
 @app.route('/api/group_measurement_frequencies_by_station/<uuid:station_id>', methods=['GET'])
 def get_group_measurement_frequencies_by_station(station_id):

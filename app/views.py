@@ -1944,7 +1944,7 @@ def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, 
     
     if not from_date:
         from_date = 0
-	if not to_date:
+    if not to_date:
         to_date_dt = datetime.utcnow()
         to_date = datetime_to_timestamp_ms(to_date_dt)
     

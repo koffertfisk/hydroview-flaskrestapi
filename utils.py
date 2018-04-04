@@ -12,6 +12,9 @@ from cassandra.util import Date, OrderedMapSerializedKey
 from cassandra_udts import Averages, Description, Livewebcam, Position, Thumbnails
 
 
+def datetime_to_timestamp_ms(dt):
+	return calendar.timegm(dt.utctimetuple()) * 1e3
+
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, OrderedMapSerializedKey):

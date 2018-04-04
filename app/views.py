@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from flask import abort, make_response
 
 from app import app, session
-from utils import CustomEncoder
+from utils import CustomEncoder, datetime_to_timestamp_ms
 
 @app.route('/')
 def index():
@@ -1937,9 +1937,17 @@ def get_dynamic_profile_measurements_by_station_chart(station_id, parameter_id, 
     
     return json.dumps({}, cls=CustomEncoder)
     
+@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>')
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>/<string:order_by>')
-def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_date, to_date, order_by='DESC'):
+def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_date=None, to_date=None, order_by='DESC'):   
+    
+    if not from_date:
+        from_date = 0
+	if not to_date:
+        to_date_dt = datetime.utcnow()
+        to_date = datetime_to_timestamp_ms(to_date_dt)
+    
     query = """
         SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY 

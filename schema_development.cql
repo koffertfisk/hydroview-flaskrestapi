@@ -84,19 +84,18 @@ CREATE TABLE hydroview_development.fifteen_min_group_meas_by_station_grouped (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.hourly_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.hourly_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     year int,
     date_hour timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), date_hour, sensor_id)
-) WITH CLUSTERING ORDER BY (date_hour DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, year), date_hour)
+) WITH CLUSTERING ORDER BY (date_hour DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -465,19 +464,18 @@ CREATE TABLE hydroview_development.one_sec_group_measurements_by_station (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.one_min_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.one_min_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     week_first_day date,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, week_first_day), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, week_first_day), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -740,19 +738,18 @@ CREATE TABLE hydroview_development.measurement_frequencies_by_sensor_parameter (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.daily_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.daily_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     year int,
     date timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), date, sensor_id)
-) WITH CLUSTERING ORDER BY (date DESC, sensor_id ASC)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, year), date)
+) WITH CLUSTERING ORDER BY (date DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -815,19 +812,18 @@ CREATE TABLE hydroview_development.station_info_by_station (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.thirty_min_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.thirty_min_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     year int,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, year), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -895,19 +891,18 @@ CREATE TABLE hydroview_development.ten_min_group_measurements_by_station_grouped
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.ten_min_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.ten_min_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     month_first_day date,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -1173,19 +1168,18 @@ CREATE TABLE hydroview_development.sensors_by_station (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.twenty_min_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.twenty_min_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     year int,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, year), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -1409,19 +1403,18 @@ CREATE TABLE hydroview_development.hourly_group_measurements_by_station_grouped 
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.fifteen_min_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.fifteen_min_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     month_first_day date,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -1507,8 +1500,8 @@ CREATE TABLE hydroview_development.fifteen_min_group_measurements_by_station (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.one_sec_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.one_sec_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     date date,
@@ -1518,8 +1511,8 @@ CREATE TABLE hydroview_development.one_sec_single_measurements_by_station (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, date), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, date), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -1535,19 +1528,18 @@ CREATE TABLE hydroview_development.one_sec_single_measurements_by_station (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.five_min_single_measurements_by_station (
-    station_id uuid,
+CREATE TABLE hydroview_development.five_min_single_measurements_by_sensor (
+    sensor_id uuid,
     parameter_id uuid,
     qc_level int,
     month_first_day date,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp, sensor_id)
-) WITH CLUSTERING ORDER BY (timestamp DESC, sensor_id ASC)
+    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''

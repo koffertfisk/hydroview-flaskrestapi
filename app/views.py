@@ -1947,7 +1947,7 @@ def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, 
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_date, to_date, order_by,)))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_date, to_date,)))
     
     data = []
     for future in futures:

@@ -1939,7 +1939,7 @@ def get_dynamic_profile_measurements_by_station_chart(station_id, parameter_id, 
     
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>/<string:order_by>')
 def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_date, to_date, order_by='DESC'):
-    query = "SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY ?"
+    query = "SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY date ?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_date/1000.0)

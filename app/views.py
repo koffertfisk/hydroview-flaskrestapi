@@ -1038,47 +1038,19 @@ def get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, q
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/daily_single_parameter_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>', methods=['GET'])
-def get_daily_single_parameter_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_date, to_date):
+@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
+@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_hourly_single_parameter_measurements_by_station(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
     
-    query = "SELECT * FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY date ASC"
-    prepared = session.prepare(query)
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
-    from_dt = datetime.fromtimestamp(from_date/1000.0)
-    to_dt = datetime.fromtimestamp(to_date/1000.0)
-    
-    futures = []
-    for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_date, to_date, )))
+    query = """
+        SELECT * FROM hourly_single_measurements_by_sensor WHERE station_id=? AND 
+            parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
+                date_hour<=? ORDER BY date_hour {order}""".format(order=order_by)
 
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'data': []
-    }
-
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            parameter_unit = row.get('unit')
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id,
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'averages': [],
-                    'ranges': []
-                }
-
-            sensors[sensor_id_str]['averages'].append([row.get('date'), row.get('avg_value')])
-            sensors[sensor_id_str]['ranges'].append([row.get('date'), row.get('min_value'), row.get('max_value')])
-
-    return json.dumps(sensors, cls=CustomEncoder)
-
-@app.route('/api/hourly_single_parameter_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/')
-def get_hourly_single_parameter_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_single_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=?"
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -1086,7 +1058,7 @@ def get_hourly_single_parameter_measurements_by_station(station_id, parameter_id
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
     
     data = []
     for future in futures:
@@ -1095,40 +1067,6 @@ def get_hourly_single_parameter_measurements_by_station(station_id, parameter_id
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/hourly_single_parameter_measurements_by_station_chart/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/')
-def get_hourly_single_parameter_measurements_by_station_chart(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_single_measurements_by_station WHERE station_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=? ORDER BY date_hour ASC"
-    prepared = session.prepare(query)
-    
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-    
-    futures = []
-    for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (station_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
-    
-    sensors = OrderedDict()
-
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            sensor_id = row.get('sensor_id')
-            sensor_id_str = str(sensor_id)
-            parameter_unit = row.get('unit')
-            if sensor_id_str not in sensors:
-                sensors[sensor_id_str] = {
-                    'id': sensor_id, 
-                    'qc_level': qc_level,
-                    'unit': parameter_unit,
-                    'averages': [],
-                    'ranges': []
-                }
-
-            sensors[sensor_id_str]['averages'].append([row.get('date_hour'), row.get('avg_value')])
-            sensors[sensor_id_str]['ranges'].append([row.get('date_hour'), row.get('min_value'), row.get('max_value')])
-
-    return json.dumps(sensors, cls=CustomEncoder)
 
 @app.route('/api/thirty_min_single_parameter_measurements_by_station/<uuid:station_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/')
 def get_thirty_min_single_parameter_measurements_by_station(station_id, parameter_id, qc_level, from_timestamp, to_timestamp):

@@ -400,7 +400,7 @@ def get_dynamic_group_measurements_by_station_time_grouped(station_id, group_id,
 @app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>', methods=['GET'])
 @app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>', methods=['GET'])
 @app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>', methods=['GET'])
-def get_dynamic_single_parameter_measurements_by_sensor(station_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+def get_dynamic_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
     
     frequencies_query = """
         SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE 

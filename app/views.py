@@ -2177,7 +2177,7 @@ def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
     
     futures = []
     year, week_number, weekday = from_dt.isocalendar()
-    current_first_day_of_week = datetime.strptime('{} {} 1'.format(year, week_number), '%Y %W %w')
+    current_first_day_of_week = datetime.strptime('{year} {week_number} 1'.format(year=year, week_number=week_number), '%Y %W %w')
     while (current_first_day_of_week <= to_dt):
         futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_week, from_timestamp, to_timestamp, )))
         current_first_day_of_week += relativedelta(weeks=1)

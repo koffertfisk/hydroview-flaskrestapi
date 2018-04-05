@@ -17,12 +17,12 @@ def datetime_to_timestamp_ms(dt):
 	return calendar.timegm(dt.utctimetuple()) * 1e3
 
 def make_timestamp_range(from_ts, to_ts):
-	Timerange = namedtuple('Timerange', 'from_timestamp to_timestamp')
+    Timerange = namedtuple('Timerange', 'from_timestamp to_timestamp')
+
+    from_timestamp = from_ts
+    to_timestamp = to_ts
 	
-	from_timestamp = from_ts
-	to_timestamp = to_ts
-	
-	if not from_timestamp and not isinstance(from_timestamp, int):
+    if not from_timestamp and not isinstance(from_timestamp, int):
         from_timestamp = 0
     if not to_timestamp and not isinstance(to_timestamp, int):
         to_date_dt = datetime.utcnow()

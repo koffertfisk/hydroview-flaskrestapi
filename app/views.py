@@ -1534,7 +1534,7 @@ def get_one_sec_single_parameter_measurements_by_station_chart(station_id, param
 @app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
 @app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_dynamic_profile_measurements_by_sensor(station_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+def get_dynamic_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
     frequencies_query = """
         SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE 
             sensor_id=? AND parameter_id=?"""

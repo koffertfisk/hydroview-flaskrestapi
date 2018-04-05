@@ -2061,9 +2061,19 @@ def get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_le
 
     return json.dumps(data, cls=CustomEncoder)
 
+@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+		    parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
+		        timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+    
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2083,57 +2093,19 @@ def get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_l
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/fifteen_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_fifteen_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
-    prepared = session.prepare(query)
-    
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-
-    futures = []
-    
-    current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
-    while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
-        current_first_day_of_month += relativedelta(months=1)
-    
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'vertical_positions': [],
-        'data': []
-    }
-    
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            vertical_position = row.get('vertical_position')
-            parameter_unit = row.get('unit')
-            
-            if vertical_position not in series['vertical_positions']:
-                series['vertical_positions'].append(vertical_position)
-                series['data'].append({
-                    'vertical_position': vertical_position,
-                    'averages': [],
-                    'ranges': []
-                })
-            
-            for vert_pos_item in sensors['data']:
-                if vertical_position == vert_pos_item.get('vertical_position'):
-                    vert_pos_item['averages'].append([
-                        row.get('timestamp'), row.get('avg_value')
-                    ])
-                    vert_pos_item['ranges'].append([
-                        row.get('timestamp'), row.get('min_value'), row.get('max_value')
-                    ])
-
-    return json.dumps(series, cls=CustomEncoder)
-
+@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? 
+                AND timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+    
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2152,58 +2124,20 @@ def get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/ten_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_ten_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
-    prepared = session.prepare(query)
     
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-
-    futures = []
-    
-    current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
-    while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
-        current_first_day_of_month += relativedelta(months=1)
-    
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'vertical_positions': [],
-        'data': []
-    }
-    
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            vertical_position = row.get('vertical_position')
-            parameter_unit = row.get('unit')
-            
-            if vertical_position not in series['vertical_positions']:
-                series['vertical_positions'].append(vertical_position)
-                series['data'].append({
-                    'vertical_position': vertical_position,
-                    'averages': [],
-                    'ranges': []
-                })
-            
-            for vert_pos_item in sensors['data']:
-                if vertical_position == vert_pos_item.get('vertical_position'):
-                    vert_pos_item['averages'].append([
-                        row.get('timestamp'), row.get('avg_value')
-                    ])
-                    vert_pos_item['ranges'].append([
-                        row.get('timestamp'), row.get('min_value'), row.get('max_value')
-                    ])
-
-    return json.dumps(series, cls=CustomEncoder)
-    
+@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+    
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2223,57 +2157,19 @@ def get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_leve
 
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/five_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_five_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
-    prepared = session.prepare(query)
-    
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-
-    futures = []
-    
-    current_first_day_of_month = datetime(from_dt.year, from_dt.month, 1)
-    while (current_first_day_of_month <= to_dt):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_month, from_timestamp, to_timestamp, )))
-        current_first_day_of_month += relativedelta(months=1)
-    
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'vertical_positions': [],
-        'data': []
-    }
-    
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            vertical_position = row.get('vertical_position')
-            parameter_unit = row.get('unit')
-            
-            if vertical_position not in series['vertical_positions']:
-                series['vertical_positions'].append(vertical_position)
-                series['data'].append({
-                    'vertical_position': vertical_position,
-                    'averages': [],
-                    'ranges': []
-                })
-            
-            for vert_pos_item in sensors['data']:
-                if vertical_position == vert_pos_item.get('vertical_position'):
-                    vert_pos_item['averages'].append([
-                        row.get('timestamp'), row.get('avg_value')
-                    ])
-                    vert_pos_item['ranges'].append([
-                        row.get('timestamp'), row.get('min_value'), row.get('max_value')
-                    ])
-
-    return json.dumps(series, cls=CustomEncoder)
-
+@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+    
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2293,59 +2189,20 @@ def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/one_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
-    prepared = session.prepare(query)
     
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-
-    futures = []
-    
-    year, week_number, weekday = from_dt.isocalendar()
-    current_first_day_of_week = datetime.strptime('{} {} 1'.format(year, week_number), '%Y %W %w')
-    while (current_first_day_of_week <= to_dt):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_first_day_of_week, from_timestamp, to_timestamp, )))
-        current_first_day_of_week += relativedelta(weeks=1)
-    
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'vertical_positions': [],
-        'data': []
-    }
-    
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            vertical_position = row.get('vertical_position')
-            parameter_unit = row.get('unit')
-            
-            if vertical_position not in series['vertical_positions']:
-                series['vertical_positions'].append(vertical_position)
-                series['data'].append({
-                    'vertical_position': vertical_position,
-                    'averages': [],
-                    'ranges': []
-                })
-            
-            for vert_pos_item in sensors['data']:
-                if vertical_position == vert_pos_item.get('vertical_position'):
-                    vert_pos_item['averages'].append([
-                        row.get('timestamp'), row.get('avg_value')
-                    ])
-                    vert_pos_item['ranges'].append([
-                        row.get('timestamp'), row.get('min_value'), row.get('max_value')
-                    ])
-
-    return json.dumps(series, cls=CustomEncoder)
-
+@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+    
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
@@ -2364,54 +2221,6 @@ def get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/one_sec_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_one_sec_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
-    prepared = session.prepare(query)
-    
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-
-    futures = []
-    
-    current_day = datetime(from_dt.year, from_dt.month, from_dt.day)
-    while (current_day <= to_dt):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, current_day, from_timestamp, to_timestamp, )))
-        current_day += relativedelta(days=1)
-    
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'vertical_positions': [],
-        'data': []
-    }
-    
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            vertical_position = row.get('vertical_position')
-            parameter_unit = row.get('unit')
-            
-            if vertical_position not in series['vertical_positions']:
-                series['vertical_positions'].append(vertical_position)
-                series['data'].append({
-                    'vertical_position': vertical_position,
-                    'averages': [],
-                    'ranges': []
-                })
-            
-            for vert_pos_item in sensors['data']:
-                if vertical_position == vert_pos_item.get('vertical_position'):
-                    vert_pos_item['averages'].append([
-                        row.get('timestamp'), row.get('avg_value')
-                    ])
-                    vert_pos_item['ranges'].append([
-                        row.get('timestamp'), row.get('min_value'), row.get('max_value')
-                    ])
-
-    return json.dumps(series, cls=CustomEncoder)
 
 @app.route('/api/group_measurement_frequencies_by_station/<uuid:station_id>', methods=['GET'])
 def get_group_measurement_frequencies_by_station(station_id):

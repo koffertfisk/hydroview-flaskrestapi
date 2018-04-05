@@ -1997,10 +1997,10 @@ def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level,
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
+@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
 def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
     
     from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
@@ -2029,7 +2029,7 @@ def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_le
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/thirty_min_profile_measurements_by_senosr_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+@app.route('/api/thirty_min_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
 def get_thirty_min_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
     query = "SELECT * FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=? ORDER BY timestamp ASC"
     prepared = session.prepare(query)

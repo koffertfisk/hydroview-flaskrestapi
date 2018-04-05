@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from flask import abort, make_response
 
 from app import app, session
-from utils import CustomEncoder, datetime_to_timestamp_ms
+from utils import CustomEncoder, datetime_to_timestamp_ms, make_timestamp_range
 
 @app.route('/')
 def index():
@@ -1938,16 +1938,12 @@ def get_dynamic_profile_measurements_by_station_chart(station_id, parameter_id, 
     return json.dumps({}, cls=CustomEncoder)
     
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>')
-@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_date>/<int:to_date>/<string:order_by>')
-def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_date=None, to_date=None, order_by='DESC'):   
+@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
     
-    if not from_date and not isinstance(from_date, int):
-        from_date = 0
-    if not to_date and not isinstance(to_date, int):
-        to_date_dt = datetime.utcnow()
-        to_date = datetime_to_timestamp_ms(to_date_dt)
-    print(from_date, to_date)
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+
     query = """
         SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY 
@@ -1955,12 +1951,12 @@ def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, 
     
     prepared = session.prepare(query)
     
-    from_dt = datetime.fromtimestamp(from_date/1000.0)
-    to_dt = datetime.fromtimestamp(to_date/1000.0)
+    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
+    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
     
     futures = []
     for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_date, to_date,)))
+        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_timestamp, to_timestamp,)))
     
     data = []
     for future in futures:
@@ -1970,9 +1966,18 @@ def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, 
 
     return json.dumps(data, cls=CustomEncoder)
 
+@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=?"
+@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
+                date_hour<=? ORDER BY date_hour {order}""".format(order=order_by)
+    
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)

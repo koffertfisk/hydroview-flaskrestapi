@@ -1937,6 +1937,7 @@ def get_dynamic_profile_measurements_by_station_chart(station_id, parameter_id, 
     
     return json.dumps({}, cls=CustomEncoder)
     
+@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
 @app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
@@ -1966,6 +1967,7 @@ def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, 
 
     return json.dumps(data, cls=CustomEncoder)
 
+@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
 @app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
 @app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
@@ -1995,54 +1997,19 @@ def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level,
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/hourly_profile_measurements_by_sensor_chart/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_hourly_profile_measurements_by_sensor_chart(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND date_hour<=? ORDER BY date_hour ASC"
-    prepared = session.prepare(query)
-    
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-    
-    futures = []
-    for year in range(from_dt.year, to_dt.year + 1):
-        futures.append(session.execute_async(prepared, (sensor_id, parameter_id, qc_level, year, from_timestamp, to_timestamp, )))
-    
-    series = {
-        'id': sensor_id, 
-        'qc_level': qc_level,
-        'unit': "",
-        'vertical_positions': [],
-        'data': []
-    }
-    
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            vertical_position = row.get('vertical_position')
-            parameter_unit = row.get('unit')
-            
-            if vertical_position not in series['vertical_positions']:
-                series['vertical_positions'].append(vertical_position)
-                series['data'].append({
-                    'vertical_position': vertical_position,
-                    'averages': [],
-                    'ranges': []
-                })
-            
-            for vert_pos_item in sensors['data']:
-                if vertical_position == vert_pos_item.get('vertical_position'):
-                    vert_pos_item['averages'].append([
-                        row.get('date_hour'), row.get('avg_value')
-                    ])
-                    vert_pos_item['ranges'].append([
-                        row.get('date_hour'), row.get('min_value'), row.get('max_value')
-                    ])
-
-    return json.dumps(series, cls=CustomEncoder)
-
+@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND timestamp<=?"
+@app.route('/api/thirty_min_profile_measurements_by_senosr/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)

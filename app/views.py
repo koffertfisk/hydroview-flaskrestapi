@@ -1008,9 +1008,19 @@ def get_dynamic_single_parameter_measurements_by_station(station_id, parameter_i
             
     return json.dumps([], cls=CustomEncoder)
 
-@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/')
-def get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp):
-    query = "SELECT * FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=?"
+@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
+@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
+@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
+@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
+def get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
+    query = """
+        SELECT * FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY 
+                date {order}""".format(order=order_by)
+                
     prepared = session.prepare(query)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)

@@ -94,7 +94,7 @@ CREATE TABLE hydroview_development.hourly_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), date_hour)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, year), date_hour)
 ) WITH CLUSTERING ORDER BY (date_hour DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}

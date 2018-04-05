@@ -474,7 +474,7 @@ CREATE TABLE hydroview_development.one_min_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, week_first_day), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, week_first_day), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -822,7 +822,7 @@ CREATE TABLE hydroview_development.thirty_min_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, year), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -901,7 +901,7 @@ CREATE TABLE hydroview_development.ten_min_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, month_first_day), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -1178,7 +1178,7 @@ CREATE TABLE hydroview_development.twenty_min_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, year), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, year), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -1413,7 +1413,7 @@ CREATE TABLE hydroview_development.fifteen_min_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, month_first_day), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -1506,12 +1506,11 @@ CREATE TABLE hydroview_development.one_sec_single_measurements_by_sensor (
     qc_level int,
     date date,
     timestamp timestamp,
-    sensor_id uuid,
     avg_value float,
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, date), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, date), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
@@ -1538,7 +1537,7 @@ CREATE TABLE hydroview_development.five_min_single_measurements_by_sensor (
     max_value float,
     min_value float,
     unit text static,
-    PRIMARY KEY ((station_id, parameter_id, qc_level, month_first_day), timestamp)
+    PRIMARY KEY ((sensor_id, parameter_id, qc_level, month_first_day), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}

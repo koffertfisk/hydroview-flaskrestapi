@@ -1042,12 +1042,12 @@ def get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, q
 @app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
 @app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
 @app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_hourly_single_parameter_measurements_by_station(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+def get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
     
     from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     query = """
-        SELECT * FROM hourly_single_measurements_by_sensor WHERE station_id=? AND 
+        SELECT * FROM hourly_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
                 date_hour<=? ORDER BY date_hour {order}""".format(order=order_by)
 

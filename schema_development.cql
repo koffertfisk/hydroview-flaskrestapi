@@ -697,12 +697,14 @@ CREATE TABLE hydroview_development.parameter_measurement_frequencies_by_station 
     AND min_index_interval = 128
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
-    
-CREATE TABLE hydroview_development.measurement_frequencies_by_station_parameter (
+
+CREATE TABLE hydroview_development.measurement_frequencies_by_station (
     station_id uuid,
     parameter_id uuid,
+    parameter_type text,
+    sensor_id uuid,
     measurement_frequencies list<text>,
-    PRIMARY KEY ((station_id, parameter_id))
+    PRIMARY KEY ((station_id), parameter_id, parameter_type, sensor_id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -717,12 +719,35 @@ CREATE TABLE hydroview_development.measurement_frequencies_by_station_parameter 
     AND min_index_interval = 128
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
-    
+
+CREATE TABLE hydroview_development.measurement_frequencies_by_station_parameter (
+    station_id uuid,
+    parameter_id uuid,
+    parameter_type text,
+    sensor_id uuid,
+    measurement_frequencies list<text>,
+    PRIMARY KEY ((station_id, parameter_id, parameter_type), sensor_id)
+) WITH bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
+    AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1.0
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99PERCENTILE';
+
 CREATE TABLE hydroview_development.measurement_frequencies_by_sensor_parameter (
     sensor_id uuid,
     parameter_id uuid,
+    parameter_type text,
     measurement_frequencies list<text>,
-    PRIMARY KEY ((sensor_id, parameter_id))
+    PRIMARY KEY ((sensor_id, parameter_id, parameter_type))
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -1430,13 +1455,13 @@ CREATE TABLE hydroview_development.fifteen_min_single_measurements_by_sensor (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.vertical_positions_by_station_profile_parameter (
+CREATE TABLE hydroview_development.profile_vertical_positions_by_station (
     station_id uuid,
     parameter_id uuid,
+    sensor_id uuid,
     vertical_position float,
-    PRIMARY KEY ((station_id, parameter_id), vertical_position)
-) WITH CLUSTERING ORDER BY (vertical_position ASC)
-    AND bloom_filter_fp_chance = 0.01
+    PRIMARY KEY ((station_id), parameter_id, sensor_id)
+) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
     AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}

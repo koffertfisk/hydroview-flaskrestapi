@@ -6,7 +6,7 @@ from collections import defaultdict, OrderedDict
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from flask import abort, make_response
+from flask import abort, make_response, redirect, request, url_for
 
 from app import app, session
 from utils import CustomEncoder, datetime_to_timestamp_ms, make_timestamp_range
@@ -18,8 +18,8 @@ def index():
 ########## Stations API ############
 
 @app.route('/api/stations', methods=['GET'])
-@app.route('/api/stations/<int:bucket>', methods=['GET'])
-def get_stations(bucket=0):
+def get_stations():
+    bucket = request.args.get('bucket', default=0, type=int)
     query = "SELECT * FROM stations WHERE bucket=?"
     prepared = session.prepare(query)
     rows = session.execute_async(prepared, (bucket,)).result()
@@ -39,11 +39,12 @@ def get_station(station_id):
     
     return json.dumps(data, cls=CustomEncoder)    
 
-@app.route('/api/profile_vertical_positions_by_station_parameter/<uuid:station_id>/<uuid:parameter_id>', methods=['GET'])
-def get_profile_vertical_positions_by_station_parameter(station_id, parameter_id):
-    query = "SELECT * FROM vertical_positions_by_station_profile_parameter WHERE station_id=? AND parameter_id=?"
+@app.route('/api/profile_vertical_positions_by_station', methods=['GET'])
+def get_profile_vertical_positions_by_station():
+    station_id = request.args.get('station_id')
+    query = "SELECT * FROM profile_vertical_positions_by_station WHERE station_id=?"
     prepared = session.prepare(query)
-    rows = session.execute_async(prepared, (station_id, parameter_id,)).result()
+    rows = session.execute_async(prepared, (station_id,)).result()
     data =  [row for row in rows]
     
     return json.dumps(data, cls=CustomEncoder)
@@ -146,8 +147,10 @@ def get_sensors_by_station(station_id):
     
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/parameters_by_station/<uuid:station_id>', methods=['GET'])
-def get_parameters_by_station(station_id):
+@app.route('/api/parameters_by_station', methods=['GET'])
+def get_parameters_by_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    
     query = "SELECT * FROM parameters_by_station WHERE station_id=?"
     prepared = session.prepare(query)
     rows = session.execute_async(prepared, (station_id,)).result()
@@ -164,8 +167,10 @@ def get_groups_by_station(station_id):
     
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/parameter_sensors_by_station/<uuid:station_id>', methods=['GET'])
-def get_parameter_sensors_by_station(station_id):
+@app.route('/api/parameter_sensors_by_station', methods=['GET'])
+def get_parameter_sensors_by_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    
     query = "SELECT * FROM parameter_sensors_by_station WHERE station_id=?"
     prepared = session.prepare(query)
     rows = session.execute_async(prepared, (station_id,)).result()
@@ -190,6 +195,19 @@ def get_parameters_by_sensor(sensor_id):
     data = [row for row in rows]
 
     return json.dumps(data, cls=CustomEncoder)
+
+@app.route('/api/measurement_frequencies_by_sensor_parameter', methods=['GET'])
+def get_measurement_frequencies_by_sensor_parameter():
+	sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+	parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+	parameter_type = request.args.get('parameter_type', type=str)
+	
+	query = "SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE sensor_id=? AND parameter_id=? AND parameter_type=?"
+	prepared = session.prepare(query)
+	rows = session.execute_async(prepared, (sensor_id, parameter_id, parameter_type, )).result()
+	data = [row for row in rows]
+	
+	return json.dumps(data, cls=CustomEncoder)
 
 @app.route('/api/dynamic_group_measurements_by_station_time_grouped/<uuid:station_id>/<uuid:group_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>', methods=['GET'])
 def get_dynamic_group_measurements_by_station_time_grouped(station_id, group_id, qc_level, from_timestamp, to_timestamp):
@@ -396,11 +414,18 @@ def get_dynamic_group_measurements_by_station_time_grouped(station_id, group_id,
     
     return json.dumps({}, cls=CustomEncoder)
     
-@app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>', methods=['GET'])
-@app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>', methods=['GET'])
-@app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>', methods=['GET'])
-@app.route('/api/dynamic_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>', methods=['GET'])
-def get_dynamic_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/dynamic_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_dynamic_single_parameter_measurements_by_sensor():
+    
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    #qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    #order_by = request.args.get('order_by', default='DESC', type=str)
+    #data_sets = request.args.getlist('data_sets')
+    
+    #columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
     
     frequencies_query = """
         SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE 
@@ -516,6 +541,7 @@ def get_dynamic_single_parameter_measurements_by_sensor(sensor_id, parameter_id,
                         elif '10 Min' in frequencies:
                             return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '5 Min' in frequencies:
+                            return redirect(url_for('get_five_min_single_parameter_measurements_by_sensor'))
                             return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
                         elif '1 Min' in frequencies:
                             return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
@@ -608,21 +634,37 @@ def get_dynamic_single_parameter_measurements_by_sensor(sensor_id, parameter_id,
             
     return json.dumps([], cls=CustomEncoder)
 
-@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/daily_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/daily_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_daily_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND 
-            parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY 
-                date {order}""".format(order=order_by)
+        SELECT {columns} FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND year=? AND date>=? AND 
+                date<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
                 
     prepared = session.prepare(query)
     
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
     
@@ -638,20 +680,36 @@ def get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, q
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/hourly_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/hourly_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_hourly_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM hourly_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM hourly_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
-                date_hour<=? ORDER BY date_hour {order}""".format(order=order_by)
-
+                date_hour<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+                
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -669,20 +727,36 @@ def get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, 
     return json.dumps(data, cls=CustomEncoder)
 
 
-@app.route('/api/thirty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/thirty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/thirty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/thirty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/thirty_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_thirty_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM thirty_min_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM thirty_min_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
-
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+                
     prepared = session.prepare(query)
+        
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -699,20 +773,37 @@ def get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/twenty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/twenty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/twenty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/twenty_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+
+@app.route('/api/twenty_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_twenty_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM twenty_min_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM twenty_min_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
-    
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+                
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -728,21 +819,38 @@ def get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
+
+
+@app.route('/api/fifteen_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_fifteen_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-@app.route('/api/fifteen_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/fifteen_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/fifteen_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/fifteen_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM fifteen_min_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM fifteen_min_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
-
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+                
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)    
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -761,21 +869,37 @@ def get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
+
+@app.route('/api/ten_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_ten_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-@app.route('/api/ten_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/ten_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/ten_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/ten_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM ten_min_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM ten_min_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
-
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+    
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -795,20 +919,36 @@ def get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id,
 
     return json.dumps(data, cls=CustomEncoder)
         
-@app.route('/api/five_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/five_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/five_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/five_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/five_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_five_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM five_min_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM five_min_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
 
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -828,20 +968,36 @@ def get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/one_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/one_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/one_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/one_min_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/one_min_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_one_min_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, week_first_day, timestamp, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM one_min_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM one_min_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
 
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -861,21 +1017,38 @@ def get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id,
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
+
+
+@app.route('/api/one_sec_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_one_sec_single_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-@app.route('/api/one_sec_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/one_sec_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/one_sec_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/one_sec_single_parameter_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, unit"
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM one_sec_single_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM one_sec_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1230,18 +1403,34 @@ def get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_le
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/fifteen_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/fifteen_min_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_fifteen_min_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, vertical_position, unit"
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
-		    parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-		        timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+        SELECT {columns} FROM fifteen_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     prepared = session.prepare(query)
     
@@ -1394,6 +1583,17 @@ def get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
 @app.route('/api/group_measurement_frequencies_by_station/<uuid:station_id>', methods=['GET'])
 def get_group_measurement_frequencies_by_station(station_id):
     query = "SELECT * FROM group_measurement_frequencies_by_station WHERE station_id=?"
+    prepared = session.prepare(query)
+    rows = session.execute_async(prepared, (station_id, )).result()
+    data = [row for row in rows]
+    
+    return json.dumps(data, cls=CustomEncoder)
+    
+@app.route('/api/measurement_frequencies_by_station', methods=['GET'])
+def get_measurement_frequencies_by_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    
+    query = "SELECT * FROM measurement_frequencies_by_station WHERE station_id=?"
     prepared = session.prepare(query)
     rows = session.execute_async(prepared, (station_id, )).result()
     data = [row for row in rows]
@@ -1998,7 +2198,22 @@ def get_group_qc_levels_by_station(station_id):
     data = [row for row in rows]
 
     return json.dumps(data, cls=CustomEncoder)
+
+@app.route('/api/measurement_frequencies_by_station_parameter', methods=['GET'])
+def get_measurement_frequencies_by_station_parameter():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    parameter_type = request.args.get('parameter_type', type=uuid.UUID)
     
+    query = """SELECT * FROM measurement_frequencies_by_station_parameter WHERE station_id=? AND 
+        parameter_id=? AND parameter_type=?"""
+
+    prepared = session.prepare(query)
+    rows = session.execute_async(prepared, (station_id, parameter_id, parameter_type,)).result()
+    data = [row for row in rows]
+
+    return json.dumps(data, cls=CustomEncoder)
+
 @app.route('/api/parameter_measurement_frequencies_by_station/<uuid:station_id>', methods=['GET'])
 def get_parameter_measurement_frequencies_by_station(station_id):
     query = "SELECT * FROM parameter_measurement_frequencies_by_station WHERE station_id=?"

@@ -1455,12 +1455,13 @@ CREATE TABLE hydroview_development.fifteen_min_single_measurements_by_sensor (
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.profile_vertical_positions_by_station (
+CREATE TABLE hydroview_development.vertical_positions_by_station_parameter (
     station_id uuid,
     parameter_id uuid,
     sensor_id uuid,
-    vertical_position float,
-    PRIMARY KEY ((station_id), parameter_id, sensor_id)
+    vertical_positions set<float>,
+    vertical_position_unit text static,
+    PRIMARY KEY ((station_id, parameter_id), sensor_id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''

@@ -39,12 +39,13 @@ def get_station(station_id):
     
     return json.dumps(data, cls=CustomEncoder)    
 
-@app.route('/api/profile_vertical_positions_by_station', methods=['GET'])
-def get_profile_vertical_positions_by_station():
-    station_id = request.args.get('station_id')
-    query = "SELECT * FROM profile_vertical_positions_by_station WHERE station_id=?"
+@app.route('/api/profile_vertical_positions_by_station_parameter', methods=['GET'])
+def get_profile_vertical_positions_by_station_parameter():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    query = "SELECT * FROM vertical_positions_by_station_parameter WHERE station_id=? AND parameter_id=?"
     prepared = session.prepare(query)
-    rows = session.execute_async(prepared, (station_id,)).result()
+    rows = session.execute_async(prepared, (station_id, parameter_id,)).result()
     data =  [row for row in rows]
     
     return json.dumps(data, cls=CustomEncoder)
@@ -413,227 +414,7 @@ def get_dynamic_group_measurements_by_station_time_grouped(station_id, group_id,
     
     
     return json.dumps({}, cls=CustomEncoder)
-    
-@app.route('/api/dynamic_single_parameter_measurements_by_sensor', methods=['GET'])
-def get_dynamic_single_parameter_measurements_by_sensor():
-    
-    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
-    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
-    #qc_level = request.args.get('qc_level', type=int)
-    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
-    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
-    #order_by = request.args.get('order_by', default='DESC', type=str)
-    #data_sets = request.args.getlist('data_sets')
-    
-    #columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
-    
-    frequencies_query = """
-        SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE 
-            sensor_id=? AND parameter_id=?"""
-            
-    prepared_frequencies_query = session.prepare(frequencies_query)
-    frequencies_rows = session.execute_async(prepared_frequencies_query, (sensor_id, parameter_id,)).result()
-    frequencies = []
-    
-    try:
-        frequencies_row = frequencies_rows[0]
-    except IndexError as e:
-        print(e)
-    else:
-        frequencies = frequencies_row.get('measurement_frequencies', [])
-        
-    if not frequencies:
-        return json.dumps([], cls=CustomEncoder)
-    
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
-    
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
-    
-    delta = to_dt - from_dt
-
-    if delta.days < 12: # delta < 12 days
-        if delta.days < 6: # delta < 6 days
-            if delta.days < 4: # delta < 4 days
-                if delta.days < 3: # delta < 3 days
-                    if delta.days < 2:  # delta < 2 days
-                        if delta.days < 1:  # delta < 1 days
-                            if delta.seconds < (60 * 60 * 5): # delta < 5 hours                             
-                                if delta.seconds < (60 * 5):    # delta < 5 minutes
-                                    if '1 Sec' in frequencies:
-                                        return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '1 Min' in frequencies:
-                                        return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '5 Min' in frequencies:
-                                        return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '10 Min' in frequencies:
-                                        return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '15 Min' in frequencies:
-                                        return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '20 Min' in frequencies:
-                                        return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '30 Min' in frequencies:
-                                        return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif 'Hourly' in frequencies:
-                                        return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif 'Daily' in frequencies:
-                                        return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                else:   # 5 hours > delta >= 5 minutes
-                                    if '1 Min' in frequencies:
-                                        return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '1 Sec' in frequencies:
-                                        return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '5 Min' in frequencies:
-                                        return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '10 Min' in frequencies:
-                                        return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '15 Min' in frequencies:
-                                        return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '20 Min' in frequencies:
-                                        return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif '30 Min' in frequencies:
-                                        return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif 'Hourly' in frequencies:
-                                        return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                    elif 'Daily' in frequencies:
-                                        return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            else:   # 1 days > delta >= 5 hours 
-                                if '5 Min' in frequencies:
-                                    return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif '1 Min' in frequencies:
-                                    return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
-                                elif '1 Sec' in frequencies:
-                                    return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif '10 Min' in frequencies:
-                                    return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif '15 Min' in frequencies:
-                                    return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif '20 Min' in frequencies:
-                                    return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif '30 Min' in frequencies:
-                                    return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif 'Hourly' in frequencies:
-                                    return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                                elif 'Daily' in frequencies:
-                                    return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        else:   # 2 days < delta >= 1 days
-                            if '10 Min' in frequencies:
-                                return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif '5 Min' in frequencies:
-                                return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif '1 Min' in frequencies:
-                                return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
-                            elif '1 Sec' in frequencies:
-                                return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif '15 Min' in frequencies:
-                                return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif '20 Min' in frequencies:
-                                return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif '30 Min' in frequencies:
-                                return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif 'Hourly' in frequencies:
-                                return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                            elif 'Daily' in frequencies:
-                                return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    else:   # 3 days > delta >= 2 days
-                        if '15 Min' in frequencies:
-                            return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif '10 Min' in frequencies:
-                            return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif '5 Min' in frequencies:
-                            return redirect(url_for('get_five_min_single_parameter_measurements_by_sensor'))
-                            return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif '1 Min' in frequencies:
-                            return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
-                        elif '1 Sec' in frequencies:
-                            return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif '20 Min' in frequencies:
-                            return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif '30 Min' in frequencies:
-                            return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif 'Hourly' in frequencies:
-                            return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                        elif 'Daily' in frequencies:
-                            return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                else:   # 4 days > delta >= 3 days
-                    if '20 Min' in frequencies:
-                        return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif '15 Min' in frequencies:
-                        return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif '10 Min' in frequencies:
-                        return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif '5 Min' in frequencies:
-                        return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif '1 Min' in frequencies:
-                        return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
-                    elif '1 Sec' in frequencies:
-                        return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif '30 Min' in frequencies:
-                        return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif 'Hourly' in frequencies:
-                        return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                    elif 'Daily' in frequencies:
-                        return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            else:   # 6 days < delta >= 4 days
-                if '30 Min' in frequencies:
-                    return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif '20 Min' in frequencies:
-                    return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif '15 Min' in frequencies:
-                    return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif '10 Min' in frequencies:
-                    return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif '5 Min' in frequencies:
-                    return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif '1 Min' in frequencies:
-                    return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)                                
-                elif '1 Sec' in frequencies:
-                    return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif 'Hourly' in frequencies:
-                    return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-                elif 'Daily' in frequencies:
-                    return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        else:   # 12 days > delta >= 6 days
-            if 'Hourly' in frequencies:
-                return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '30 Min' in frequencies:
-                return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '20 Min' in frequencies:
-                return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '15 Min' in frequencies:
-                return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '10 Min' in frequencies:
-                return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '5 Min' in frequencies:
-                return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '1 Min' in frequencies:
-                return get_one_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif '1 Sec' in frequencies:
-                return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            elif 'Daily' in frequencies:
-                return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-    else:   # unbound > delta >= 12 days
-        if 'Daily' in frequencies:
-            return get_daily_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif 'Hourly' in frequencies:
-            return get_hourly_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '30 Min' in frequencies:
-            return get_thirty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '20 Min' in frequencies:
-            return get_twenty_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '15 Min' in frequencies:
-            return get_fifteen_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '10 Min' in frequencies:
-            return get_ten_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '5 Min' in frequencies:
-            return get_five_min_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '1 Min' in frequencies:
-            return get_one_min_single_parameter_measurements_by_station(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-        elif '1 Sec' in frequencies:
-            return get_one_sec_single_parameter_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp)
-            
-    return json.dumps([], cls=CustomEncoder)
-
+ 
 @app.route('/api/daily_min_single_parameter_measurements_by_sensor', methods=['GET'])
 def get_daily_min_single_parameter_measurements_by_sensor():
     sensor_id = request.args.get('sensor_id', type=uuid.UUID)
@@ -645,6 +426,11 @@ def get_daily_min_single_parameter_measurements_by_sensor():
     data_sets = request.args.getlist('data_sets')
     
     columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -691,6 +477,11 @@ def get_hourly_min_single_parameter_measurements_by_sensor():
     data_sets = request.args.getlist('data_sets')
     
     columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -739,6 +530,11 @@ def get_thirty_min_single_parameter_measurements_by_sensor():
     
     columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
     
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
     if not data_sets:
         columns += ",min, avg, max"
     
@@ -786,6 +582,11 @@ def get_twenty_min_single_parameter_measurements_by_sensor():
     
     columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
     
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
     if not data_sets:
         columns += ",min, avg, max"
     
@@ -832,6 +633,11 @@ def get_fifteen_min_single_parameter_measurements_by_sensor():
     data_sets = request.args.getlist('data_sets')
     
     columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -882,6 +688,11 @@ def get_ten_min_single_parameter_measurements_by_sensor():
     
     columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
     
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
     if not data_sets:
         columns += ",min, avg, max"
     
@@ -931,6 +742,11 @@ def get_five_min_single_parameter_measurements_by_sensor():
     
     columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, unit"
     
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+        
     if not data_sets:
         columns += ",min, avg, max"
     
@@ -979,6 +795,11 @@ def get_one_min_single_parameter_measurements_by_sensor():
     data_sets = request.args.getlist('data_sets')
     
     columns = "sensor_id, parameter_id, qc_level, week_first_day, timestamp, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -1031,6 +852,11 @@ def get_one_sec_single_parameter_measurements_by_sensor():
     
     columns = "sensor_id, parameter_id, qc_level, date, timestamp, unit"
     
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
     if not data_sets:
         columns += ",min, avg, max"
     
@@ -1067,232 +893,37 @@ def get_one_sec_single_parameter_measurements_by_sensor():
             data.append(row)
 
     return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/dynamic_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_dynamic_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
-    frequencies_query = """
-        SELECT * FROM measurement_frequencies_by_sensor_parameter WHERE 
-            sensor_id=? AND parameter_id=?"""
-            
-    prepared_frequencies_query = session.prepare(frequencies_query)
-    frequencies_rows = session.execute_async(prepared_frequencies_query, (sensor_id, parameter_id,)).result()
-    frequencies = []
     
-    try:
-        frequencies_row = frequencies_rows[0]
-    except IndexError as e:
-        print(e)
-    else:
-        frequencies = frequencies_row.get('measurement_frequencies', [])
-        
-    if not frequencies:
-        return json.dumps([], cls=CustomEncoder)
+@app.route('/api/daily_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_daily_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
     
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
+    if not data_sets:
+        columns += ",min, avg, max"
     
-    delta = to_dt - from_dt
-
-    if delta.days < 12: # delta < 12 days
-        if delta.days < 6: # delta < 6 days
-            if delta.days < 4: # delta < 4 days
-                if delta.days < 3: # delta < 3 days
-                    if delta.days < 2:  # delta < 2 days
-                        if delta.days < 1:  # delta < 1 days
-                            if delta.seconds < (60 * 60 * 5): # delta < 5 hours                             
-                                if delta.seconds < (60 * 5):    # delta < 5 minutes
-                                    if '1 Sec' in frequencies:
-                                        return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '1 Min' in frequencies:
-                                        return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '5 Min' in frequencies:
-                                        return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '10 Min' in frequencies:
-                                        return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '15 Min' in frequencies:
-                                        return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '20 Min' in frequencies:
-                                        return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '30 Min' in frequencies:
-                                        return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif 'Hourly' in frequencies:
-                                        return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif 'Daily' in frequencies:
-                                        return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                else:   # 5 hours > delta >= 5 minutes
-                                    if '1 Min' in frequencies:
-                                        return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '1 Sec' in frequencies:
-                                        return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '5 Min' in frequencies:
-                                        return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '10 Min' in frequencies:
-                                        return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '15 Min' in frequencies:
-                                        return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '20 Min' in frequencies:
-                                        return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif '30 Min' in frequencies:
-                                        return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif 'Hourly' in frequencies:
-                                        return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                    elif 'Daily' in frequencies:
-                                        return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            else:   # 1 days > delta >= 5 hours 
-                                if '5 Min' in frequencies:
-                                    return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif '1 Min' in frequencies:
-                                    return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)                                
-                                elif '1 Sec' in frequencies:
-                                    return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif '10 Min' in frequencies:
-                                    return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif '15 Min' in frequencies:
-                                    return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif '20 Min' in frequencies:
-                                    return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif '30 Min' in frequencies:
-                                    return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif 'Hourly' in frequencies:
-                                    return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                                elif 'Daily' in frequencies:
-                                    return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        else:   # 2 days < delta >= 1 days
-                            if '10 Min' in frequencies:
-                                return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif '5 Min' in frequencies:
-                                return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif '1 Min' in frequencies:
-                                return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)                                
-                            elif '1 Sec' in frequencies:
-                                return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif '15 Min' in frequencies:
-                                return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif '20 Min' in frequencies:
-                                return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif '30 Min' in frequencies:
-                                return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif 'Hourly' in frequencies:
-                                return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                            elif 'Daily' in frequencies:
-                                return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    else:   # 3 days > delta >= 2 days
-                        if '15 Min' in frequencies:
-                            return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif '10 Min' in frequencies:
-                            return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif '5 Min' in frequencies:
-                            return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif '1 Min' in frequencies:
-                            return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)                                
-                        elif '1 Sec' in frequencies:
-                            return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif '20 Min' in frequencies:
-                            return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif '30 Min' in frequencies:
-                            return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif 'Hourly' in frequencies:
-                            return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                        elif 'Daily' in frequencies:
-                            return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                else:   # 4 days > delta >= 3 days
-                    if '20 Min' in frequencies:
-                        return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif '15 Min' in frequencies:
-                        return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif '10 Min' in frequencies:
-                        return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif '5 Min' in frequencies:
-                        return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif '1 Min' in frequencies:
-                        return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)                                
-                    elif '1 Sec' in frequencies:
-                        return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif '30 Min' in frequencies:
-                        return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif 'Hourly' in frequencies:
-                        return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                    elif 'Daily' in frequencies:
-                        return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            else:   # 6 days < delta >= 4 days
-                if '30 Min' in frequencies:
-                    return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif '20 Min' in frequencies:
-                    return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif '15 Min' in frequencies:
-                    return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif '10 Min' in frequencies:
-                    return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif '5 Min' in frequencies:
-                    return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif '1 Min' in frequencies:
-                    return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)                                
-                elif '1 Sec' in frequencies:
-                    return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif 'Hourly' in frequencies:
-                    return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-                elif 'Daily' in frequencies:
-                    return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        else:   # 12 days > delta >= 6 days
-            if 'Hourly' in frequencies:
-                return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '30 Min' in frequencies:
-                return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '20 Min' in frequencies:
-                return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '15 Min' in frequencies:
-                return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '10 Min' in frequencies:
-                return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '5 Min' in frequencies:
-                return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '1 Min' in frequencies:
-                return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif '1 Sec' in frequencies:
-                return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-            elif 'Daily' in frequencies:
-                return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-    else:   # unbound > delta >= 12 days
-        if 'Daily' in frequencies:
-            return get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif 'Hourly' in frequencies:
-            return get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '30 Min' in frequencies:
-            return get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '20 Min' in frequencies:
-            return get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '15 Min' in frequencies:
-            return get_fifteen_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '10 Min' in frequencies:
-            return get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '5 Min' in frequencies:
-            return get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '1 Min' in frequencies:
-            return get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
-        elif '1 Sec' in frequencies:
-            return get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp, to_timestamp, order_by)
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
-    return json.dumps([], cls=CustomEncoder)
-    
-@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/daily_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
-    
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
-
     query = """
-        SELECT * FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND 
-            parameter_id=? AND qc_level=? AND year=? AND date>=? AND date<=? ORDER BY 
-                date {order}""".format(order=order_by)
+        SELECT {columns} FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND 
+            parameter_id=? AND qc_level=? AND year=? AND date>=? AND 
+                date<=? ORDER BY date {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1309,20 +940,41 @@ def get_daily_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, 
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/hourly_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/hourly_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_hourly_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
-                date_hour<=? ORDER BY date_hour {order}""".format(order=order_by)
+                date_hour<=? ORDER BY date_hour {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1339,20 +991,41 @@ def get_hourly_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level,
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/thirty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/thirty_min_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_thirty_min_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM thirty_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
 
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1371,20 +1044,41 @@ def get_thirty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_le
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/twenty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/twenty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/twenty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/twenty_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_twenty_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/twenty_min_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_twenty_min_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM twenty_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM twenty_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1414,6 +1108,11 @@ def get_fifteen_min_profile_parameter_measurements_by_sensor():
     data_sets = request.args.getlist('data_sets')
     
     columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -1451,20 +1150,41 @@ def get_fifteen_min_profile_parameter_measurements_by_sensor():
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/ten_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/ten_min_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_ten_min_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM ten_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? 
-                AND timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                AND timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1483,20 +1203,41 @@ def get_ten_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
 
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/five_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/five_min_profile_parameter_measurements_by_sensor')
+def get_five_min_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM five_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND month_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1515,20 +1256,41 @@ def get_five_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_leve
 
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/one_min_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/one_min_profile_parameter_measurements_by_sensor', methods=['GET'])
+def get_one_min_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM one_min_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND week_first_day=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
@@ -1548,20 +1310,41 @@ def get_one_min_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level
 
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>')
-@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<string:order_by>')
-@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>')
-@app.route('/api/one_sec_profile_measurements_by_sensor/<uuid:sensor_id>/<uuid:parameter_id>/<int:qc_level>/<int:from_timestamp>/<int:to_timestamp>/<string:order_by>')
-def get_one_sec_profile_measurements_by_sensor(sensor_id, parameter_id, qc_level, from_timestamp=None, to_timestamp=None, order_by='DESC'):
+@app.route('/api/one_sec_profile_parameter_measurements_by_sensor')
+def get_one_sec_profile_parameter_measurements_by_sensor():
+    sensor_id = request.args.get('sensor_id', type=uuid.UUID)
+    parameter_id = request.args.get('parameter_id', type=uuid.UUID)
+    qc_level = request.args.get('qc_level', type=int)
+    from_timestamp = request.args.get('from_timestamp', default=None, type=int)
+    to_timestamp = request.args.get('to_timestamp', default=None, type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    data_sets = request.args.getlist('data_sets')
     
-    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
+    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    
+    try:
+        data_sets = data_sets[0].split(',')
+    except IndexError as e:
+        data_sets = []
+    
+    if not data_sets:
+        columns += ",min, avg, max"
+    
+    if "min" in data_sets:
+        columns += ",min_value"
+    if "avg" in data_sets:
+        columns += ",avg_value"
+    if "max" in data_sets:
+        columns += ",max_value"
     
     query = """
-        SELECT * FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND 
+        SELECT {columns} FROM one_sec_profile_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND date=? AND timestamp>=? AND 
-                timestamp<=? ORDER BY timestamp {order}""".format(order=order_by)
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
+    
+    from_timestamp, to_timestamp = make_timestamp_range(from_timestamp, to_timestamp)
     
     from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
     to_dt = datetime.fromtimestamp(to_timestamp/1000.0)

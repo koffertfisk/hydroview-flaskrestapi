@@ -27,8 +27,9 @@ def get_stations():
 
     return json.dumps(data, cls=CustomEncoder)
     
-@app.route('/api/station/<uuid:station_id>', methods=['GET'])
-def get_station(station_id):
+@app.route('/api/station', methods=['GET'])
+def get_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
     query = "SELECT * FROM station_info_by_station WHERE id=?"
     prepared = session.prepare(query)
     rows = session.execute_async(prepared, (station_id,)).result()
@@ -50,8 +51,9 @@ def get_profile_vertical_positions_by_station_parameter():
     
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/webcam_live_urls_by_station/<uuid:station_id>', methods=['GET'])
-def get_webcam_live_urls_by_station(station_id):
+@app.route('/api/webcam_live_urls_by_station', methods=['GET'])
+def get_webcam_live_urls_by_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
     query = "SELECT * FROM webcam_live_urls_by_station WHERE station_id=?"
     prepared = session.prepare(query)
     rows = session.execute_async(prepared, (station_id,)).result()
@@ -59,84 +61,75 @@ def get_webcam_live_urls_by_station(station_id):
     
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/video_urls_by_station/<uuid:station_id>/<int:from_timestamp>/<int:to_timestamp>', methods=['GET'])
-def get_video_urls_by_station(station_id, from_timestamp, to_timestamp):
-    query = "SELECT * FROM video_urls_by_station WHERE station_id=? AND added_date>=? AND added_date<=?"
+@app.route('/api/video_urls_by_station', methods=['GET'])
+def get_video_urls_by_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    from_timestamp = request.args.get('from_timestamp', type=int)
+    to_timestamp = request.args.get('to_timestamp', type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    limit = request.args.get('limit', default=0, type=int)
+    
+    query = """
+        SELECT * FROM video_urls_by_station WHERE station_id=? AND added_date>=? AND 
+            added_date<=? ORDER BY added_date {order}""".format(order=order_by)
+    
+    if limit:
+        query += " LIMIT {limit}".format(limit=limit)
+
     prepared = session.prepare(query)
     from_dt = datetime.fromtimestamp(from_timestamp/1000)
     to_dt = datetime.fromtimestamp(to_timestamp/1000)
+    
     rows = session.execute_async(prepared, (station_id, from_dt, to_dt,)).result()   
-    data = [row for row in rows]
     
-    return json.dumps(data, cls=CustomEncoder)
-    
-@app.route('/api/video_urls_by_station_asc_limit/<uuid:station_id>/<int:limit>', methods=['GET'])
-def get_video_urls_by_station_asc_limit(station_id, limit):
-    query = "SELECT * FROM video_urls_by_station WHERE station_id=? ORDER BY added_date ASC LIMIT ?"
-    prepared = session.prepare(query)
-    rows = session.execute_async(prepared, (station_id, limit,)).result()   
-    data = [row for row in rows]
-    
-    return json.dumps(data, cls=CustomEncoder)
-    
-@app.route('/api/video_urls_by_station_desc_limit/<uuid:station_id>/<int:limit>', methods=['GET'])
-def get_video_urls_by_station_desc_limit(station_id, limit):
-    query = "SELECT * FROM video_urls_by_station WHERE station_id=? ORDER BY added_date DESC LIMIT ?"
-    prepared = session.prepare(query)
-    rows = session.execute_async(prepared, (station_id, limit,)).result()   
     data = [row for row in rows]
     
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/hourly_webcam_photos_by_station/<uuid:station_id>/<int:on_timestamp>', methods=['GET'])
-def get_hourly_webcam_photos_by_station_on_timestamp(station_id, on_timestamp):
-    query = "SELECT * FROM hourly_webcam_photos_by_station WHERE station_id=? AND date=? ORDER BY timestamp ASC"
-    prepared = session.prepare(query)
-    on_dt = datetime.fromtimestamp(on_timestamp/1000)
-    rows = session.execute_async(prepared, (station_id, on_dt,)).result()   
-    data = [row for row in rows]
-
-    return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/hourly_webcam_photos_by_station/<uuid:station_id>/<int:from_timestamp>/<int:to_timestamp>', methods=['GET'])
-def get_hourly_webcam_photos_by_station(station_id, from_timestamp, to_timestamp):
-    query = "SELECT * FROM hourly_webcam_photos_by_station WHERE station_id=? AND date=? AND timestamp >=? AND timestamp <=?"
-    prepared = session.prepare(query)
+@app.route('/api/hourly_webcam_photos_by_station', methods=['GET'])
+def get_hourly_webcam_photos_by_station():
+    station_id = request.args.get('station_id', type=uuid.UUID)
+    from_timestamp = request.args.get('from_timestamp', type=int)
+    on_timestamp = request.args.get('on_timestamp', type=int)
+    to_timestamp = request.args.get('to_timestamp', type=int)
+    order_by = request.args.get('order_by', default='DESC', type=str)
+    limit = request.args.get('limit', default=0, type=int)
     
-    from_dt = datetime.fromtimestamp(from_timestamp/1000.0)
-    to_dt = datetime.fromtimestamp(to_timestamp/1000.0)
+    query = "SELECT * FROM hourly_webcam_photos_by_station WHERE station_id=? AND date=? "
+        
+    if from_timestamp and to_timestamp: 
+        query += "AND timestamp >=? AND timestamp <=? "
     
-    futures = []
+    query += "ORDER BY timestamp {order} ".format(order=order_by)
 
-    current_date = datetime(from_dt.year, from_dt.month, from_dt.day)
-
-    while (current_date <= to_dt):
-        futures.append(session.execute_async(prepared, (station_id, current_date, from_timestamp, to_timestamp,)))
-        current_date += relativedelta(days=1)
+    if limit:
+        query += "LIMIT {limit}".format(limit=limit)
+    
+    prepared = session.prepare(query)
     
     data = []
     
-    for future in futures:
-        rows = future.result()
-        for row in rows:
-            data.append(row)
+    if on_timestamp:
+        on_dt = datetime.fromtimestamp(on_timestamp/1000)
+        rows = session.execute_async(prepared, (station_id, on_dt,)).result()
+        data = [row for row in rows]
+    elif from_timestamp and to_timestamp:
+        from_dt = datetime.fromtimestamp(from_timestamp/1000)
+        to_dt = datetime.fromtimestamp(to_timestamp/1000)
+        
+        futures = []
+
+        current_date = datetime(from_dt.year, from_dt.month, from_dt.day)
+
+        while (current_date <= to_dt):
+            futures.append(session.execute_async(prepared, (station_id, current_date, from_timestamp, to_timestamp,)))
+            current_date += relativedelta(days=1)
+
+        for future in futures:
+            rows = future.result()
+            for row in rows:
+                data.append(row)
     
-    return json.dumps(data, cls=CustomEncoder)
-
-@app.route('/api/hourly_webcam_photos_by_station_by_limit/<uuid:station_id>/<int:on_timestamp>', methods=['GET'])
-@app.route('/api/hourly_webcam_photos_by_station_by_limit/<uuid:station_id>/<int:on_timestamp>/<int:limit>', methods=['GET'])
-def get_hourly_webcam_photos_by_station_by_limit(station_id, on_timestamp, limit=None):
-    query = "SELECT * FROM hourly_webcam_photos_by_station WHERE station_id=? AND date=?"
-    date_partition = datetime.fromtimestamp(on_timestamp/1000.0)
-    if limit:
-        query += " LIMIT ?"
-    prepared = session.prepare(query)
-    if limit: 
-        rows = session.execute_async(prepared, (station_id, date_partition, limit,)).result()
-    else:
-        rows = session.execute_async(prepared, (station_id, date_partition, )).result()
-    data =  [row for row in rows]
-
     return json.dumps(data, cls=CustomEncoder)
 
 @app.route('/api/sensors_by_station/<uuid:station_id>', methods=['GET'])

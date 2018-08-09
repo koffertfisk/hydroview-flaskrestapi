@@ -13,7 +13,7 @@ class Config(object):
 
 class ProductionConfig(Config):
     KEYSPACE = "hydroview"    # Production keyspace
-    HOSTS = ['85.24.137.186', '85.24.137.188']    # Production cluster nodes
+    HOSTS = ['192.168.50.10', '192.168.50.11']    # Production cluster nodes
     PORT = 9042    # Production cluster port
 
 

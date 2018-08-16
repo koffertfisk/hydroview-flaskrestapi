@@ -459,8 +459,8 @@ def get_daily_single_parameter_measurements_by_sensor():
 
     return json.dumps(data, cls=CustomEncoder)
 
-@app.route('/api/hourly_min_single_parameter_measurements_by_sensor', methods=['GET'])
-def get_hourly_min_single_parameter_measurements_by_sensor():
+@app.route('/api/hourly_single_parameter_measurements_by_sensor', methods=['GET'])
+def get_hourly_single_parameter_measurements_by_sensor():
     sensor_id = request.args.get('sensor_id', type=uuid.UUID)
     parameter_id = request.args.get('parameter_id', type=uuid.UUID)
     qc_level = request.args.get('qc_level', type=int)

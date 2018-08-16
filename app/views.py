@@ -897,7 +897,7 @@ def get_daily_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, date, vertical_position, unit"
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -943,7 +943,7 @@ def get_hourly_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, date_hour, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -994,7 +994,7 @@ def get_thirty_min_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -1047,7 +1047,7 @@ def get_twenty_min_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -1153,7 +1153,7 @@ def get_ten_min_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -1206,7 +1206,7 @@ def get_five_min_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, month_first_day, timestamp, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -1259,7 +1259,7 @@ def get_one_min_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, date, timestamp, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, week_first_day, timestamp, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')

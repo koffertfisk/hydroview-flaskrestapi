@@ -651,29 +651,6 @@ CREATE TABLE hydroview_development.one_sec_group_measurements_by_station_grouped
     AND read_repair_chance = 0.0
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE hydroview_development.parameter_measurement_frequencies_by_station (
-    station_id uuid,
-    parameter_name text,
-    parameter_id uuid,
-    parameter_type text,
-    measurement_frequencies list<text>,
-    PRIMARY KEY (station_id, parameter_name, parameter_id, parameter_type)
-) WITH CLUSTERING ORDER BY (parameter_name ASC, parameter_id ASC, parameter_type ASC)
-    AND bloom_filter_fp_chance = 0.01
-    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
-    AND comment = ''
-    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
-    AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
-    AND crc_check_chance = 1.0
-    AND dclocal_read_repair_chance = 0.1
-    AND default_time_to_live = 0
-    AND gc_grace_seconds = 864000
-    AND max_index_interval = 2048
-    AND memtable_flush_period_in_ms = 0
-    AND min_index_interval = 128
-    AND read_repair_chance = 0.0
-    AND speculative_retry = '99PERCENTILE';
-
 CREATE TABLE hydroview_development.measurement_frequencies_by_station (
     station_id uuid,
     parameter_id uuid,

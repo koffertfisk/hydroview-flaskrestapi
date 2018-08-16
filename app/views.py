@@ -408,7 +408,7 @@ def get_dynamic_group_measurements_by_station_time_grouped(station_id, group_id,
     
     return json.dumps({}, cls=CustomEncoder)
  
-@app.route('/api/daily_min_single_parameter_measurements_by_sensor', methods=['GET'])
+@app.route('/api/daily_single_parameter_measurements_by_sensor', methods=['GET'])
 def get_daily_min_single_parameter_measurements_by_sensor():
     sensor_id = request.args.get('sensor_id', type=uuid.UUID)
     parameter_id = request.args.get('parameter_id', type=uuid.UUID)

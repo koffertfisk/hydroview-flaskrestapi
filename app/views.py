@@ -418,7 +418,7 @@ def get_daily_single_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, date, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -438,7 +438,7 @@ def get_daily_single_parameter_measurements_by_sensor():
     query = """
         SELECT {columns} FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date>=? AND 
-                date<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+                date<=? ORDER BY date {order}""".format(columns=columns, order=order_by)
                 
     prepared = session.prepare(query)
     
@@ -469,7 +469,7 @@ def get_hourly_min_single_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, date_hour, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -489,7 +489,7 @@ def get_hourly_min_single_parameter_measurements_by_sensor():
     query = """
         SELECT {columns} FROM hourly_single_measurements_by_sensor WHERE sensor_id=? AND 
             parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
-                date_hour<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
+                date_hour<=? ORDER BY date_hour {order}""".format(columns=columns, order=order_by)
                 
     prepared = session.prepare(query)
     

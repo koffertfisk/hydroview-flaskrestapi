@@ -8,7 +8,7 @@ from base64 import b64encode
 from collections import OrderedDict, namedtuple
 from datetime import datetime
 
-from cassandra.util import Date, OrderedMapSerializedKey
+from cassandra.util import Date, OrderedMapSerializedKey, SortedSet
 
 from cassandra_udts import Averages, Description, Livewebcam, Position, Thumbnails
 
@@ -63,3 +63,5 @@ class CustomEncoder(json.JSONEncoder):
                 'm': b64encode(obj.m).decode('utf-8'),
                 's': b64encode(obj.s).decode('utf-8')
             }
+        elif isinstance(obj, SortedSet):
+            return [i for i in SortedSet]

@@ -64,4 +64,4 @@ class CustomEncoder(json.JSONEncoder):
                 's': b64encode(obj.s).decode('utf-8')
             }
         elif isinstance(obj, SortedSet):
-            return [i for i in SortedSet]
+            return [i for i in obj]

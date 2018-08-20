@@ -418,7 +418,7 @@ def get_daily_single_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, year, date, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -437,8 +437,8 @@ def get_daily_single_parameter_measurements_by_sensor():
     
     query = """
         SELECT {columns} FROM daily_single_measurements_by_sensor WHERE sensor_id=? AND 
-            parameter_id=? AND qc_level=? AND year=? AND date>=? AND 
-                date<=? ORDER BY date {order}""".format(columns=columns, order=order_by)
+            parameter_id=? AND qc_level=? AND year=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
                 
     prepared = session.prepare(query)
     
@@ -469,7 +469,7 @@ def get_hourly_single_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, year, date_hour, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -488,8 +488,8 @@ def get_hourly_single_parameter_measurements_by_sensor():
     
     query = """
         SELECT {columns} FROM hourly_single_measurements_by_sensor WHERE sensor_id=? AND 
-            parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
-                date_hour<=? ORDER BY date_hour {order}""".format(columns=columns, order=order_by)
+            parameter_id=? AND qc_level=? AND year=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
                 
     prepared = session.prepare(query)
     
@@ -897,7 +897,7 @@ def get_daily_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, year, date, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, vertical_position, unit"
     
     if not data_sets:
         columns += ",min, avg, max"
@@ -911,8 +911,8 @@ def get_daily_profile_parameter_measurements_by_sensor():
     
     query = """
         SELECT {columns} FROM daily_profile_measurements_by_sensor WHERE sensor_id=? AND 
-            parameter_id=? AND qc_level=? AND year=? AND date>=? AND 
-                date<=? ORDER BY date {order}""".format(columns=columns, order=order_by)
+            parameter_id=? AND qc_level=? AND year=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
     
@@ -943,7 +943,7 @@ def get_hourly_profile_parameter_measurements_by_sensor():
     order_by = request.args.get('order_by', default='DESC', type=str)
     data_sets = request.args.getlist('data_sets')
     
-    columns = "sensor_id, parameter_id, qc_level, year, date_hour, vertical_position, unit"
+    columns = "sensor_id, parameter_id, qc_level, year, timestamp, vertical_position, unit"
     
     try:
         data_sets = data_sets[0].split(',')
@@ -962,8 +962,8 @@ def get_hourly_profile_parameter_measurements_by_sensor():
     
     query = """
         SELECT {columns} FROM hourly_profile_measurements_by_sensor WHERE sensor_id=? AND 
-            parameter_id=? AND qc_level=? AND year=? AND date_hour>=? AND 
-                date_hour<=? ORDER BY date_hour {order}""".format(columns=columns, order=order_by)
+            parameter_id=? AND qc_level=? AND year=? AND timestamp>=? AND 
+                timestamp<=? ORDER BY timestamp {order}""".format(columns=columns, order=order_by)
     
     prepared = session.prepare(query)
     

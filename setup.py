@@ -21,6 +21,6 @@ setup(
         'PyYAML==3.12',
         'six==1.10.0',
         'vine==1.1.3',
-        'Werkzeug==0.11.11'
+        'Werkzeug==0.15.3'
     ],
 )

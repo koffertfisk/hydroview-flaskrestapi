@@ -13,7 +13,7 @@ setup(
         'click==6.6',
         'flask',
         'itsdangerous',
-        'Jinja2==2.8',
+        'Jinja2==2.11.3',
         'kombu==4.0.2',
         'MarkupSafe==0.23',
         'python-dateutil==2.6.0',

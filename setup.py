@@ -18,7 +18,7 @@ setup(
         'MarkupSafe==0.23',
         'python-dateutil==2.6.0',
         'pytz==2016.10',
-        'PyYAML==3.12',
+        'PyYAML==5.4',
         'six==1.10.0',
         'vine==1.1.3',
         'Werkzeug==0.11.11'

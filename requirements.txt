@@ -16,7 +16,7 @@ Jinja2==2.10
 kombu==4.0.2
 MarkupSafe==1.0
 oauthlib==2.0.2
-py==1.4.33
+py==1.10.0
 pytest==3.0.7
 python-dateutil==2.6.0
 python-twitter==3.3

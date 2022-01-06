@@ -9,7 +9,7 @@ setup(
         'aniso8601==1.2.0',
         'billiard==3.5.0.2',
         'cassandra-driver==3.7.1',
-        'celery==4.0.2',
+        'celery==5.2.2',
         'click==6.6',
         'flask',
         'itsdangerous',
